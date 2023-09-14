@@ -19,6 +19,12 @@ struct Mem
 			Data[i] = 0;
 		}
 	}
+
+	// Read 1 byte
+	Byte operator[](u32 Address) const
+	{
+		return Data[Address];
+	}
 };
 
 struct CPU
@@ -37,13 +43,30 @@ struct CPU
 	Byte V : 1; // Status flag
 	Byte N : 1; // Status flag
 
-	void Reset(Mem& mem)
+	void Reset(Mem& memory)
 	{
 		PC = 0xFFFC;
 		SP = 0x0100;
 		C = Z = I = D = B = V = N = 0;
 		A = X = Y = 0;
-		mem.Initialise();
+		memory.Initialise();
+	}
+
+	Byte FetchByte(u32& Cycles, Mem& memory)
+	{
+		Byte Data = memory[PC];
+		PC++;
+		Cycles--;
+
+		return Data;
+	}
+
+	void Execute(u32 Cycles, Mem& memory)
+	{
+		while(Cycles > 0)
+		{
+			Byte Ins = FetchByte(Cycles, memory);
+		}
 	}
 };
 
@@ -51,7 +74,9 @@ int main()
 {
 	Mem mem;
 	CPU cpu;
-	// reset also resets the memory
+	// Reset also resets the memory
 	cpu.Reset(mem);
+	cpu.Execute(2, mem);
+
 	return 0;
 }
