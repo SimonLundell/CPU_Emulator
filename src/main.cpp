@@ -43,6 +43,9 @@ struct CPU
 	Byte V : 1; // Status flag
 	Byte N : 1; // Status flag
 
+	// Opcodes (this CPU has byte codes)
+	static constexpr Byte INS_LDA_IM = 0xA9;
+
 	void Reset(Mem& memory)
 	{
 		PC = 0xFFFC;
@@ -66,6 +69,23 @@ struct CPU
 		while(Cycles > 0)
 		{
 			Byte Ins = FetchByte(Cycles, memory);
+			switch(Ins)
+			{
+				// If fetched instruction matches, fetch data from memory and set flags per docs.
+				case INS_LDA_IM:
+				{
+					Byte Value = FetchByte(Cycles, memory);
+					A = Value;
+					Z = (A == 0);
+					N = (A & 0b10000000) > 0; // If 7th bit of A set
+					break;
+				}
+				default:
+				{
+					printf("Instruction not handled %d", Ins);
+					break;
+				}
+			}
 		}
 	}
 };
