@@ -1,4 +1,4 @@
-6502 Instruction Set https://www.masswerk.at/6502/6502_instruction_set.html#LDA
+6502 Instruction Set https://www.pagetable.com/c64ref/6502/?tab=2#LDA
 
 C64 Memory Map: https://sta.c64.org/cbm64mem.html
 
