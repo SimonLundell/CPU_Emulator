@@ -25,6 +25,11 @@ struct Mem
 	{
 		return Data[Address];
 	}
+	// Assign byte
+	Byte& operator[](u32 Address)
+	{
+		return Data[Address];
+	}
 };
 
 struct CPU
@@ -96,6 +101,11 @@ int main()
 	CPU cpu;
 	// Reset also resets the memory
 	cpu.Reset(mem);
+	// Start fake program
+	mem[0xFFFC] = CPU::INS_LDA_IM;
+	mem[0xFFFD] = 0x42;
+	// End fake program
+
 	cpu.Execute(2, mem);
 
 	return 0;
