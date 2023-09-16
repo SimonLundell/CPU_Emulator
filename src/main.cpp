@@ -51,6 +51,7 @@ struct CPU
 	// Opcodes (this CPU has byte codes)
 	static constexpr Byte INS_LDA_IM = 0xA9;
 	static constexpr Byte INS_LDA_ZP = 0xA5;
+	static constexpr Byte INS_LDA_ZPX = 0xB5;
 
 	void Reset(Mem& memory)
 	{
@@ -102,6 +103,15 @@ struct CPU
 				{
 					Byte ZeroPageAddress = FetchByte(Cycles, memory);
 				    A = ReadByte(Cycles, ZeroPageAddress, memory);
+					LDASetStatus();
+					break;
+				}
+				case INS_LDA_ZPX:
+				{
+					Byte ZeroPageAddress = FetchByte(Cycles, memory);
+					ZeroPageAddress += X;
+					Cycles--;
+					A = ReadByte(Cycles, ZeroPageAddress, memory);
 					LDASetStatus();
 					break;
 				}

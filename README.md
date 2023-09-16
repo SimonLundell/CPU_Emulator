@@ -1,4 +1,4 @@
-6502 Instruction Set https://www.pagetable.com/c64ref/6502/?tab=2#LDA
+6502 Instruction Set: https://www.nesdev.org/obelisk-6502-guide/reference.html 
 
 C64 Memory Map: https://sta.c64.org/cbm64mem.html
 
