@@ -50,6 +50,7 @@ struct CPU
 
 	// Opcodes (this CPU has byte codes)
 	static constexpr Byte INS_LDA_IM = 0xA9;
+	static constexpr Byte INS_LDA_ZP = 0xA5;
 
 	void Reset(Mem& memory)
 	{
@@ -69,6 +70,19 @@ struct CPU
 		return Data;
 	}
 
+	Byte ReadByte(u32& Cycles, Byte Address, Mem& memory)
+	{
+		Byte Data = memory[Address];
+		Cycles--;
+		return Data;
+	}
+
+	void LDASetStatus()
+	{
+		Z = (A == 0);
+		N = (A & 0b10000000) > 0; // If 7th bit of A set
+	}
+
 	void Execute(u32 Cycles, Mem& memory)
 	{
 		while(Cycles > 0)
@@ -81,8 +95,14 @@ struct CPU
 				{
 					Byte Value = FetchByte(Cycles, memory);
 					A = Value;
-					Z = (A == 0);
-					N = (A & 0b10000000) > 0; // If 7th bit of A set
+					LDASetStatus();
+					break;
+				}
+				case INS_LDA_ZP:
+				{
+					Byte ZeroPageAddress = FetchByte(Cycles, memory);
+				    A = ReadByte(Cycles, ZeroPageAddress, memory);
+					LDASetStatus();
 					break;
 				}
 				default:
@@ -102,8 +122,9 @@ int main()
 	// Reset also resets the memory
 	cpu.Reset(mem);
 	// Start fake program
-	mem[0xFFFC] = CPU::INS_LDA_IM;
+	mem[0xFFFC] = CPU::INS_LDA_ZP;
 	mem[0xFFFD] = 0x42;
+	mem[0x0042] = 0x84;
 	// End fake program
 
 	cpu.Execute(2, mem);
