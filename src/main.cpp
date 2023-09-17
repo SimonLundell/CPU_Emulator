@@ -25,11 +25,19 @@ struct Mem
 	{
 		return Data[Address];
 	}
-	// Assign byte
+	
+  // Assign byte
 	Byte& operator[](u32 Address)
 	{
 		return Data[Address];
 	}
+
+  void WriteWord(u32& Cycles, Word Value, u32 Address)
+  {
+    Data[Address] = Value & 0xFF;
+    Data[Address + 1] = (Value >> 8);
+    Cycles -= 2;
+  }
 };
 
 struct CPU
@@ -52,6 +60,7 @@ struct CPU
 	static constexpr Byte INS_LDA_IM = 0xA9;
 	static constexpr Byte INS_LDA_ZP = 0xA5;
 	static constexpr Byte INS_LDA_ZPX = 0xB5;
+	static constexpr Byte INS_JSR = 0x20;
 
 	void Reset(Mem& memory)
 	{
@@ -70,6 +79,26 @@ struct CPU
 
 		return Data;
 	}
+
+  Word FetchWord(u32& Cycles, Mem& memory)
+  {
+    // 6502 is little endian
+    Word Data = memory[PC];
+    PC++;
+
+    Data |= (Memory[PC] << 8 );
+    PC++;
+    Cycles -= 2;
+    
+    /*
+     * If the platform is big endian,
+     * it has to be implemented here, e.g.:
+     * IF (PLATFORM_BIG_ENDIAN)
+     *  SwapBytesInWord(Data);
+     * */
+
+    return Data;
+  }
 
 	Byte ReadByte(u32& Cycles, Byte Address, Mem& memory)
 	{
@@ -97,15 +126,13 @@ struct CPU
 					Byte Value = FetchByte(Cycles, memory);
 					A = Value;
 					LDASetStatus();
-					break;
-				}
+				} break;
 				case INS_LDA_ZP:
 				{
 					Byte ZeroPageAddress = FetchByte(Cycles, memory);
 				    A = ReadByte(Cycles, ZeroPageAddress, memory);
 					LDASetStatus();
-					break;
-				}
+				} break;
 				case INS_LDA_ZPX:
 				{
 					Byte ZeroPageAddress = FetchByte(Cycles, memory);
@@ -113,13 +140,19 @@ struct CPU
 					Cycles--;
 					A = ReadByte(Cycles, ZeroPageAddress, memory);
 					LDASetStatus();
-					break;
-				}
+				} break;
+        case INS_JSR:
+        {
+          Word SubAddr = FetchWord(Cycles, memory);
+          memory.WriteWord(Cycles, PC - 1, SP);
+          SP++;
+          PC = SubAddr;
+          Cycles--;
+        }
 				default:
 				{
 					printf("Instruction not handled %d", Ins);
-					break;
-				}
+				} break;
 			}
 		}
 	}
