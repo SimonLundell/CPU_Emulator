@@ -86,7 +86,7 @@ struct CPU
     Word Data = memory[PC];
     PC++;
 
-    Data |= (Memory[PC] << 8 );
+    Data |= (memory[PC] << 8 );
     PC++;
     Cycles -= 2;
     
@@ -170,7 +170,7 @@ int main()
 	mem[0x0042] = 0x84;
 	// End fake program
 
-	cpu.Execute(2, mem);
+	cpu.Execute(3, mem);
 
 	return 0;
 }
