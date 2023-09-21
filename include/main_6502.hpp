@@ -6,6 +6,7 @@ using Byte = unsigned char;
 using Word = unsigned short;
 
 using u32 = unsigned int;
+using s32 = signed int;
 
 struct Mem
 {
@@ -32,7 +33,7 @@ struct Mem
 		return Data[Address];
 	}
 
-  void WriteWord(u32& Cycles, Word Value, u32 Address)
+  void WriteWord(s32& Cycles, Word Value, u32 Address)
   {
     Data[Address] = Value & 0xFF;
     Data[Address + 1] = (Value >> 8);
@@ -71,7 +72,7 @@ struct CPU
 		memory.Initialise();
 	}
 
-	Byte FetchByte(u32& Cycles, Mem& memory)
+	Byte FetchByte(s32& Cycles, Mem& memory)
 	{
 		Byte Data = memory[PC];
 		PC++;
@@ -80,7 +81,7 @@ struct CPU
 		return Data;
 	}
 
-  Word FetchWord(u32& Cycles, Mem& memory)
+  Word FetchWord(s32& Cycles, Mem& memory)
   {
     // 6502 is little endian
     Word Data = memory[PC];
@@ -100,7 +101,7 @@ struct CPU
     return Data;
   }
 
-	Byte ReadByte(u32& Cycles, Byte Address, Mem& memory)
+	Byte ReadByte(s32& Cycles, Byte Address, Mem& memory)
 	{
 		Byte Data = memory[Address];
 		Cycles--;
@@ -113,8 +114,10 @@ struct CPU
 		N = (A & 0b10000000) > 0; // If 7th bit of A set
 	}
 
-	void Execute(u32 Cycles, Mem& memory)
+  // Return number of cycles used
+	s32 Execute(s32 Cycles, Mem& memory)
 	{
+    const s32 CyclesRequested = Cycles;
 		while(Cycles > 0)
 		{
 			Byte Ins = FetchByte(Cycles, memory);
@@ -155,5 +158,6 @@ struct CPU
 				} break;
 			}
 		}
+    return CyclesRequested - Cycles;
 	}
 };
