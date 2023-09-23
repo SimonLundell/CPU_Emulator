@@ -26,19 +26,46 @@ class M6502Test1 : public testing::Test
     }
 };
 
+TEST_F(M6502Test1, TheCPUDoesNothingWhenWeExecuteZeroCycles)
+{
+  // Given
+  constexpr u32 NUM_CYCLES = 0;
+  
+  // When
+  s32 CyclesUsed = cpu.Execute(NUM_CYCLES, mem);
+  
+  // Then
+  EXPECT_EQ(CyclesUsed, NUM_CYCLES);
+}
+
+TEST_F(M6502Test1, CPUCanExecuteMoreCyclesThanGivenIfNeeded)
+{
+  // Given
+  mem[0xFFFC] = CPU::INS_LDA_IM;
+  mem[0xFFFD] = 0x84;
+  constexpr u32 NUM_CYCLES = 1;
+
+  // When
+	s32 CyclesUsed = cpu.Execute(NUM_CYCLES, mem);
+
+  // Then
+  EXPECT_EQ(CyclesUsed, 2);
+}
+
 TEST_F(M6502Test1, LDAImmediateCanLoadValueIntoTheARegister)
 {
   // Given
   mem[0xFFFC] = CPU::INS_LDA_IM;
   mem[0xFFFD] = 0x84;
+  constexpr u32 NUM_CYCLES = 2;
 
   // When
   CPU CPUCopy = cpu;
-	s32 CyclesUsed = cpu.Execute(2, mem);
+	s32 CyclesUsed = cpu.Execute(NUM_CYCLES, mem);
 
   // Then
   EXPECT_EQ(cpu.A, 0x84);
-  EXPECT_EQ(CyclesUsed, 2);
+  EXPECT_EQ(CyclesUsed, NUM_CYCLES);
   EXPECT_FALSE(cpu.Z);
   EXPECT_TRUE(cpu.N);
   VerifyUnmodifiedFlagsFromLDA(CPUCopy);
@@ -50,14 +77,15 @@ TEST_F(M6502Test1, LDAZeroPageCanLoadValueIntoTheARegister)
   mem[0xFFFC] = CPU::INS_LDA_ZP;
   mem[0xFFFD] = 0x42;
   mem[0x0042] = 0x37;
+  constexpr u32 NUM_CYCLES = 3;
 
   // When
   CPU CPUCopy = cpu;
-	s32 CyclesUsed = cpu.Execute(3, mem);
+	s32 CyclesUsed = cpu.Execute(NUM_CYCLES, mem);
 
   // Then
   EXPECT_EQ(cpu.A, 0x37);
-  EXPECT_EQ(CyclesUsed, 3);
+  EXPECT_EQ(CyclesUsed, NUM_CYCLES);
   EXPECT_FALSE(cpu.Z);
   EXPECT_FALSE(cpu.N);
   VerifyUnmodifiedFlagsFromLDA(CPUCopy);
@@ -70,14 +98,15 @@ TEST_F(M6502Test1, LDAZeroPageXCanLoadValueIntoTheARegister)
   mem[0xFFFC] = CPU::INS_LDA_ZPX;
   mem[0xFFFD] = 0x42;
   mem[0x0047] = 0x37;
+  constexpr u32 NUM_CYCLES = 4;
 
   // When
   CPU CPUCopy = cpu;
-	s32 CyclesUsed = cpu.Execute(4, mem);
+	s32 CyclesUsed = cpu.Execute(NUM_CYCLES, mem);
 
   // Then
   EXPECT_EQ(cpu.A, 0x37);
-  EXPECT_EQ(CyclesUsed, 4);
+  EXPECT_EQ(CyclesUsed, NUM_CYCLES);
   EXPECT_FALSE(cpu.Z);
   EXPECT_FALSE(cpu.N);
   VerifyUnmodifiedFlagsFromLDA(CPUCopy);
@@ -90,14 +119,15 @@ TEST_F(M6502Test1, LDAZeroPageXCanLoadValueIntoTheARegisterAfterWrap)
   mem[0xFFFC] = CPU::INS_LDA_ZPX;
   mem[0xFFFD] = 0x80;
   mem[0x007F] = 0x37;
+  constexpr u32 NUM_CYCLES = 4;
 
   // When
   CPU CPUCopy = cpu;
-	s32 CyclesUsed = cpu.Execute(4, mem);
+	s32 CyclesUsed = cpu.Execute(NUM_CYCLES, mem);
 
   // Then
   EXPECT_EQ(cpu.A, 0x37);
-  EXPECT_EQ(CyclesUsed, 4);
+  EXPECT_EQ(CyclesUsed, NUM_CYCLES);
   EXPECT_FALSE(cpu.Z);
   EXPECT_FALSE(cpu.N);
   VerifyUnmodifiedFlagsFromLDA(CPUCopy);
@@ -109,11 +139,209 @@ TEST_F(M6502Test1, JumpToSubRoutine)
 	mem[0xFFFC] = CPU::INS_JSR;
 	mem[0xFFFD] = 0x42;
 	mem[0xFFFE] = 0x42;
+  constexpr u32 NUM_CYCLES = 6;
 
   // When
-	s32 CyclesUsed = cpu.Execute(6, mem);
+	s32 CyclesUsed = cpu.Execute(NUM_CYCLES, mem);
 
   // Then
   EXPECT_EQ(cpu.PC, 0x4242);
-  EXPECT_EQ(CyclesUsed, 6);
+  EXPECT_EQ(CyclesUsed, NUM_CYCLES);
+}
+
+TEST_F(M6502Test1, LDAImmediateCanAffectTheZeroFlag)
+{
+  // Given
+  cpu.A = 0x44;
+  mem[0xFFFC] = CPU::INS_LDA_IM;
+  mem[0xFFFD] = 0x0;
+  constexpr u32 NUM_CYCLES = 2;
+
+  // When
+  CPU CPUCopy = cpu;
+	cpu.Execute(NUM_CYCLES, mem);
+
+  // Then
+  EXPECT_FALSE(cpu.N);
+  EXPECT_TRUE(cpu.Z);
+  VerifyUnmodifiedFlagsFromLDA(CPUCopy);
+}
+
+TEST_F(M6502Test1, LDAAbsoluteCanLoadValueIntoTheARegister)
+{
+  // Given
+  cpu.X = 0xFF;
+  mem[0xFFFC] = CPU::INS_LDA_ABS;
+  mem[0xFFFD] = 0x80;
+  mem[0xFFFE] = 0x44;
+  mem[0x4480] = 0x37;
+  constexpr u32 NUM_CYCLES = 4;
+
+  // When
+  CPU CPUCopy = cpu;
+	s32 CyclesUsed = cpu.Execute(NUM_CYCLES, mem);
+
+  // Then
+  EXPECT_EQ(cpu.A, 0x37);
+  EXPECT_EQ(CyclesUsed, NUM_CYCLES);
+  EXPECT_FALSE(cpu.N);
+  EXPECT_FALSE(cpu.Z);
+  VerifyUnmodifiedFlagsFromLDA(CPUCopy);
+}
+
+TEST_F(M6502Test1, LDAAbsoluteXCanLoadValueIntoTheARegister)
+{
+  // Given
+  cpu.X = 1;
+  mem[0xFFFC] = CPU::INS_LDA_ABSX;
+  mem[0xFFFD] = 0x80;
+  mem[0xFFFE] = 0x44;
+  mem[0x4481] = 0x37;
+  constexpr u32 NUM_CYCLES = 4;
+
+  // When
+  CPU CPUCopy = cpu;
+	s32 CyclesUsed = cpu.Execute(NUM_CYCLES, mem);
+
+  // Then
+  EXPECT_EQ(cpu.A, 0x37);
+  EXPECT_EQ(CyclesUsed, NUM_CYCLES);
+  EXPECT_FALSE(cpu.N);
+  EXPECT_FALSE(cpu.Z);
+  VerifyUnmodifiedFlagsFromLDA(CPUCopy);
+}
+
+TEST_F(M6502Test1, LDAIndirectXCanLoadValueIntoTheARegister)
+{
+  // Given
+  cpu.X = 0x04;
+  mem[0xFFFC] = CPU::INS_LDA_INDX;
+  mem[0xFFFD] = 0x02;
+  mem[0x0006] = 0x00; // 0x02 + 0x04
+  mem[0x0007] = 0x80;
+  mem[0x8000] = 0x37;
+  constexpr u32 NUM_CYCLES = 6;
+
+  // When
+  CPU CPUCopy = cpu;
+	s32 CyclesUsed = cpu.Execute(NUM_CYCLES, mem);
+
+  // Then
+  EXPECT_EQ(cpu.A, 0x37);
+  EXPECT_EQ(CyclesUsed, NUM_CYCLES);
+  EXPECT_FALSE(cpu.N);
+  EXPECT_FALSE(cpu.Z);
+  VerifyUnmodifiedFlagsFromLDA(CPUCopy);
+}
+
+TEST_F(M6502Test1, LDAAbsoluteXCanLoadValueIntoTheARegisterWhenItCrossesAPageBoundary)
+{
+  // Given
+  cpu.X = 0xFF;
+  mem[0xFFFC] = CPU::INS_LDA_ABSX;
+  mem[0xFFFD] = 0x02;
+  mem[0xFFFE] = 0x44;
+  mem[0x4501] = 0x37; // 0x4402 + 0xFF
+  constexpr u32 NUM_CYCLES = 5;
+
+  // When
+  CPU CPUCopy = cpu;
+	s32 CyclesUsed = cpu.Execute(NUM_CYCLES, mem);
+
+  // Then
+  EXPECT_EQ(cpu.A, 0x37);
+  EXPECT_EQ(CyclesUsed, NUM_CYCLES);
+  EXPECT_FALSE(cpu.N);
+  EXPECT_FALSE(cpu.Z);
+  VerifyUnmodifiedFlagsFromLDA(CPUCopy);
+}
+
+TEST_F(M6502Test1, LDAAbsoluteYCanLoadValueIntoTheARegister)
+{
+  // Given
+  cpu.Y = 1;
+  mem[0xFFFC] = CPU::INS_LDA_ABSY;
+  mem[0xFFFD] = 0x80;
+  mem[0xFFFE] = 0x44;
+  mem[0x4481] = 0x37;
+  constexpr u32 NUM_CYCLES = 4;
+
+  // When
+  CPU CPUCopy = cpu;
+	s32 CyclesUsed = cpu.Execute(NUM_CYCLES, mem);
+
+  // Then
+  EXPECT_EQ(cpu.A, 0x37);
+  EXPECT_EQ(CyclesUsed, NUM_CYCLES);
+  EXPECT_FALSE(cpu.N);
+  EXPECT_FALSE(cpu.Z);
+  VerifyUnmodifiedFlagsFromLDA(CPUCopy);
+}
+
+TEST_F(M6502Test1, LDAIndirectYCanLoadValueIntoTheARegister)
+{
+  // Given
+  cpu.Y = 0x04;
+  mem[0xFFFC] = CPU::INS_LDA_INDY;
+  mem[0xFFFD] = 0x02;
+  mem[0x0002] = 0x00; 
+  mem[0x0003] = 0x80;
+  mem[0x8004] = 0x37; // 0x8000 + 0x04 (Y)
+  constexpr u32 NUM_CYCLES = 5;
+
+  // When
+  CPU CPUCopy = cpu;
+	s32 CyclesUsed = cpu.Execute(NUM_CYCLES, mem);
+
+  // Then
+  EXPECT_EQ(cpu.A, 0x37);
+  EXPECT_EQ(CyclesUsed, NUM_CYCLES);
+  EXPECT_FALSE(cpu.N);
+  EXPECT_FALSE(cpu.Z);
+  VerifyUnmodifiedFlagsFromLDA(CPUCopy);
+}
+
+TEST_F(M6502Test1, LDAIndirectYCanLoadValueIntoTheARegisterWhenItCrossesAPageBoundary)
+{
+  // Given
+  cpu.Y = 0xFF;
+  mem[0xFFFC] = CPU::INS_LDA_INDY;
+  mem[0xFFFD] = 0x02;
+  mem[0x0002] = 0x02; 
+  mem[0x0003] = 0x80;
+  mem[0x8101] = 0x37; // 0x8002 + 0xFF (Y)
+  constexpr u32 NUM_CYCLES = 6;
+
+  // When
+  CPU CPUCopy = cpu;
+	s32 CyclesUsed = cpu.Execute(NUM_CYCLES, mem);
+
+  // Then
+  EXPECT_EQ(cpu.A, 0x37);
+  EXPECT_EQ(CyclesUsed, NUM_CYCLES);
+  EXPECT_FALSE(cpu.N);
+  EXPECT_FALSE(cpu.Z);
+  VerifyUnmodifiedFlagsFromLDA(CPUCopy);
+}
+
+TEST_F(M6502Test1, LDAAbsoluteYCanLoadValueIntoTheARegisterWhenItCrossesAPageBoundary)
+{
+  // Given
+  cpu.Y = 0xFF;
+  mem[0xFFFC] = CPU::INS_LDA_ABSY;
+  mem[0xFFFD] = 0x02;
+  mem[0xFFFE] = 0x44;
+  mem[0x4501] = 0x37; // 0x4402 + 0xFF
+  constexpr u32 NUM_CYCLES = 5;
+
+  // When
+  CPU CPUCopy = cpu;
+	s32 CyclesUsed = cpu.Execute(NUM_CYCLES, mem);
+
+  // Then
+  EXPECT_EQ(cpu.A, 0x37);
+  EXPECT_EQ(CyclesUsed, NUM_CYCLES);
+  EXPECT_FALSE(cpu.N);
+  EXPECT_FALSE(cpu.Z);
+  VerifyUnmodifiedFlagsFromLDA(CPUCopy);
 }
