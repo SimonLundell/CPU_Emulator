@@ -82,6 +82,12 @@ m6502::s32 m6502::CPU::Execute(s32 Cycles, Mem& memory)
                 PC = SubAddr;
                 Cycles--;
             } break;
+            case INS_LDX_IM:
+            {
+                Byte Value = FetchByte(Cycles, memory);
+                X = Value;
+                LDXSetStatus();
+            } break;
             default:
             {
                 printf("Instruction not handled %d\n", Ins);

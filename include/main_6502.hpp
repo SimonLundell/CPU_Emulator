@@ -33,7 +33,7 @@ struct m6502::Mem
 		return Data[Address];
 	}
 	
-  // Assign byte
+	// Assign byte
 	Byte& operator[](u32 Address)
 	{
 		return Data[Address];
@@ -64,6 +64,9 @@ struct m6502::CPU
 	Byte N : 1; // Status flag
 
 	// Opcodes (this CPU has byte codes)
+	// JSR
+	static constexpr Byte INS_JSR = 0x20;
+	// LDA
 	static constexpr Byte INS_LDA_IM = 0xA9;
 	static constexpr Byte INS_LDA_ZP = 0xA5;
 	static constexpr Byte INS_LDA_ZPX = 0xB5;
@@ -72,7 +75,9 @@ struct m6502::CPU
 	static constexpr Byte INS_LDA_ABSY = 0xB9;
 	static constexpr Byte INS_LDA_INDX = 0xA1;
 	static constexpr Byte INS_LDA_INDY = 0xB1;
-	static constexpr Byte INS_JSR = 0x20;
+	// LDX
+	static constexpr Byte INS_LDX_IM = 0xA2;
+
 
 	s32 Execute(s32 Cycles, Mem& memory);
 
@@ -133,5 +138,11 @@ struct m6502::CPU
 	{
 		Z = (A == 0);
 		N = (A & 0b10000000) > 0; // If 7th bit of A set
+	}
+
+	void LDXSetStatus()
+	{
+		Z = (X == 0);
+		N = (X & 0b10000000) > 0; // If 7th bit of X is set
 	}
 };
