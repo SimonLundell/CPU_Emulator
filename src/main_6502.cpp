@@ -1,39 +1,95 @@
-#include <cstdio>
+#include <main_6502.hpp>
 
-#include "gtest/gtest.h"
 
-#if defined(GTEST_OS_ESP8266) || defined(GTEST_OS_ESP32) || \
-    (defined(GTEST_OS_NRF52) && defined(ARDUINO))
-// Arduino-like platforms: program entry points are setup/loop instead of main.
-
-#ifdef GTEST_OS_ESP8266
-extern "C" {
-#endif
-
-void setup() { testing::InitGoogleTest(); }
-
-void loop() { RUN_ALL_TESTS(); }
-
-#ifdef GTEST_OS_ESP8266
-}
-#endif
-
-#elif defined(GTEST_OS_QURT)
-// QuRT: program entry point is main, but argc/argv are unusable.
-
-GTEST_API_ int main() {
-  printf("Running main() from %s\n", __FILE__);
-  testing::InitGoogleTest();
-  return RUN_ALL_TESTS();
-}
-#else
-// Normal platforms: program entry point is main, argc/argv are initialized.
-
-GTEST_API_ int main(int argc, char **argv) 
+m6502::s32 m6502::CPU::Execute(s32 Cycles, Mem& memory)
 {
-  printf("Running main() from %s\n", __FILE__);
-  testing::InitGoogleTest(&argc, argv);
-  
-  return RUN_ALL_TESTS();
+    const s32 CyclesRequested = Cycles;
+    while(Cycles > 0)
+    {
+        Byte Ins = FetchByte(Cycles, memory);
+        switch(Ins)
+        {
+            // If fetched instruction matches, fetch data from memory and set flags per docs.
+            case INS_LDA_IM:
+            {
+                Byte Value = FetchByte(Cycles, memory);
+                A = Value;
+                LDASetStatus();
+            } break;
+            case INS_LDA_ZP:
+            {
+                Byte ZeroPageAddress = FetchByte(Cycles, memory);
+                A = ReadByte(Cycles, ZeroPageAddress, memory);
+                LDASetStatus();
+            } break;
+            case INS_LDA_ZPX:
+            {
+                Byte ZeroPageAddress = FetchByte(Cycles, memory);
+                ZeroPageAddress += X;
+                Cycles--;
+                A = ReadByte(Cycles, ZeroPageAddress, memory);
+                LDASetStatus();
+            } break;
+            case INS_LDA_ABS:
+            {
+                Word AbsAddr = FetchWord(Cycles, memory);
+                A = ReadByte(Cycles, AbsAddr, memory);
+                LDASetStatus();
+            } break;
+            case INS_LDA_ABSX:
+            {
+                Word AbsAddr = FetchWord(Cycles, memory);
+                A = ReadByte(Cycles, AbsAddr + X, memory);
+                if ((AbsAddr + X) - AbsAddr >= 0xFF)
+                {
+                    Cycles--;
+                }
+                LDASetStatus();
+            } break;
+            case INS_LDA_ABSY:
+            {
+                Word AbsAddr = FetchWord(Cycles, memory);
+                A = ReadByte(Cycles, AbsAddr + Y, memory);
+                if ((AbsAddr + Y) - AbsAddr >= 0xFF)
+                {
+                    Cycles--;
+                }
+                LDASetStatus();
+            } break;
+            case INS_LDA_INDX:
+            {
+                Byte ZPageAddr = FetchByte(Cycles, memory);
+                ZPageAddr += X;
+                Cycles--; // X register takes 1 more cycle than Y for design reasons
+                Word EffectiveAddr = ReadWord(Cycles, ZPageAddr, memory); 
+                A = ReadByte(Cycles, EffectiveAddr, memory);
+            } break;
+            case INS_LDA_INDY:
+            {
+                Byte ZPageAddr = FetchByte(Cycles, memory);
+                Word EffectiveAddr = ReadWord(Cycles, ZPageAddr, memory);
+                A = ReadByte(Cycles, EffectiveAddr + Y, memory);
+                if ((EffectiveAddr + Y) - EffectiveAddr >= 0xFF)
+                {
+                    Cycles--;
+                }
+            } break;
+            case INS_JSR:
+            {
+                Word SubAddr = FetchWord(Cycles, memory);
+                memory.WriteWord(Cycles, PC - 1, SP);
+                SP++;
+                PC = SubAddr;
+                Cycles--;
+            } break;
+            default:
+            {
+                printf("Instruction not handled %d\n", Ins);
+                throw -1;
+            } break;
+        }
+    }
+
+    const s32 ActualCyclesUsed = CyclesRequested - Cycles;
+    return ActualCyclesUsed;
 }
-#endif

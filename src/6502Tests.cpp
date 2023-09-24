@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include "main_6502.hpp"
 
+using namespace m6502;
+
 class M6502Test1 : public testing::Test
 {
   public:

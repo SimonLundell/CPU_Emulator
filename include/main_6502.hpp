@@ -2,13 +2,19 @@
 #include <stdlib.h>
 
 // Needs to be accessed by both CPU and memory
-using Byte = unsigned char;
-using Word = unsigned short;
+namespace m6502
+{
+	using Byte = unsigned char;
+	using Word = unsigned short;
 
-using u32 = unsigned int;
-using s32 = signed int;
+	using u32 = unsigned int;
+	using s32 = signed int;
 
-struct Mem
+	struct Mem;
+	struct CPU;
+}
+
+struct m6502::Mem
 {
 	static constexpr u32 MAX_MEM = 1024 * 64;
 	Byte Data[MAX_MEM];
@@ -41,7 +47,7 @@ struct Mem
   }
 };
 
-struct CPU
+struct m6502::CPU
 {
 
 	Word PC; // Program counter
@@ -67,6 +73,8 @@ struct CPU
 	static constexpr Byte INS_LDA_INDX = 0xA1;
 	static constexpr Byte INS_LDA_INDY = 0xB1;
 	static constexpr Byte INS_JSR = 0x20;
+
+	s32 Execute(s32 Cycles, Mem& memory);
 
 	void Reset(Mem& memory)
 	{
@@ -125,99 +133,5 @@ struct CPU
 	{
 		Z = (A == 0);
 		N = (A & 0b10000000) > 0; // If 7th bit of A set
-	}
-
-  // Return number of cycles used
-	s32 Execute(s32 Cycles, Mem& memory)
-	{
-    const s32 CyclesRequested = Cycles;
-		while(Cycles > 0)
-		{
-			Byte Ins = FetchByte(Cycles, memory);
-			switch(Ins)
-			{
-				// If fetched instruction matches, fetch data from memory and set flags per docs.
-				case INS_LDA_IM:
-				{
-					Byte Value = FetchByte(Cycles, memory);
-					A = Value;
-					LDASetStatus();
-				} break;
-				case INS_LDA_ZP:
-				{
-					Byte ZeroPageAddress = FetchByte(Cycles, memory);
-				    A = ReadByte(Cycles, ZeroPageAddress, memory);
-					LDASetStatus();
-				} break;
-				case INS_LDA_ZPX:
-				{
-					Byte ZeroPageAddress = FetchByte(Cycles, memory);
-					ZeroPageAddress += X;
-					Cycles--;
-					A = ReadByte(Cycles, ZeroPageAddress, memory);
-					LDASetStatus();
-				} break;
-				case INS_LDA_ABS:
-				{
-					Word AbsAddr = FetchWord(Cycles, memory);
-					A = ReadByte(Cycles, AbsAddr, memory);
-					LDASetStatus();
-				} break;
-				case INS_LDA_ABSX:
-				{
-					Word AbsAddr = FetchWord(Cycles, memory);
-					A = ReadByte(Cycles, AbsAddr + X, memory);
-					if ((AbsAddr + X) - AbsAddr >= 0xFF)
-					{
-						Cycles--;
-					}
-					LDASetStatus();
-				} break;
-				case INS_LDA_ABSY:
-				{
-					Word AbsAddr = FetchWord(Cycles, memory);
-					A = ReadByte(Cycles, AbsAddr + Y, memory);
-					if ((AbsAddr + Y) - AbsAddr >= 0xFF)
-					{
-						Cycles--;
-					}
-					LDASetStatus();
-				} break;
-				case INS_LDA_INDX:
-				{
-					Byte ZPageAddr = FetchByte(Cycles, memory);
-					ZPageAddr += X;
-					Cycles--;
-					Word EffectiveAddr = ReadWord(Cycles, ZPageAddr, memory); 
-					A = ReadByte(Cycles, EffectiveAddr, memory);
-				} break;
-				case INS_LDA_INDY:
-				{
-					Byte ZPageAddr = FetchByte(Cycles, memory);
-					Word EffectiveAddr = ReadWord(Cycles, ZPageAddr, memory);
-					A = ReadByte(Cycles, EffectiveAddr + Y, memory);
-					if ((EffectiveAddr + Y) - EffectiveAddr >= 0xFF)
-					{
-						Cycles--;
-					}
-				} break;
-				case INS_JSR:
-				{
-					Word SubAddr = FetchWord(Cycles, memory);
-					memory.WriteWord(Cycles, PC - 1, SP);
-					SP++;
-					PC = SubAddr;
-					Cycles--;
-				} break;
-				default:
-				{
-					printf("Instruction not handled %d\n", Ins);
-					throw -1;
-				} break;
-			}
-		}
-	
-	const s32 ActualCyclesUsed = CyclesRequested - Cycles;
-    return ActualCyclesUsed;
 	}
 };
