@@ -77,6 +77,8 @@ struct m6502::CPU
 	static constexpr Byte INS_LDA_INDY = 0xB1;
 	// LDX
 	static constexpr Byte INS_LDX_IM = 0xA2;
+	// LDY
+	static constexpr Byte INS_LDY_IM = 0xA0;
 
 
 	s32 Execute(s32 Cycles, Mem& memory);
@@ -134,15 +136,9 @@ struct m6502::CPU
 		return Data;
 	}
 
-	void LDASetStatus()
+	void LoadRegisterSetStatus(const Byte& Register)
 	{
-		Z = (A == 0);
-		N = (A & 0b10000000) > 0; // If 7th bit of A set
-	}
-
-	void LDXSetStatus()
-	{
-		Z = (X == 0);
-		N = (X & 0b10000000) > 0; // If 7th bit of X is set
+		Z = (Register == 0);
+		N = (Register & 0b10000000) > 0; // If 7th bit of A set
 	}
 };

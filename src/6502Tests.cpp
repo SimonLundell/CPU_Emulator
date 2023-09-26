@@ -364,7 +364,7 @@ TEST_F(M6502Test1, LDXImmediateCanLoadValueToTheXRegister)
   VerifyUnmodifiedFlagsFromLDAXY(CPUCopy);
 }
 
-TEST_F(M6502Test1, LDXImmediateCanAffectTheZFlag)
+TEST_F(M6502Test1, LDXImmediateCanAffectTheZeroFlag)
 {
   cpu.X = 0x44;
   mem[0xFFFC] = CPU::INS_LDX_IM;
@@ -379,9 +379,54 @@ TEST_F(M6502Test1, LDXImmediateCanAffectTheZFlag)
   VerifyUnmodifiedFlagsFromLDAXY(CPUCopy);
 }
 
-TEST_F(M6502Test1, LDXImmediateCanAffectTheNFlag)
+TEST_F(M6502Test1, LDXImmediateCanAffectTheNegativeFlag)
 {
   mem[0xFFFC] = CPU::INS_LDX_IM;
+  mem[0xFFFD] = 0x80;
+  constexpr u32 NUM_CYCLES = 2;
+
+  CPU CPUCopy = cpu;
+  cpu.Execute(NUM_CYCLES, mem);
+
+  EXPECT_FALSE(cpu.Z);
+  EXPECT_TRUE(cpu.N);
+  VerifyUnmodifiedFlagsFromLDAXY(CPUCopy);
+}
+
+TEST_F(M6502Test1, LDYImmediateCanLoadValueToTheYRegister)
+{
+  mem[0xFFFC] = CPU::INS_LDY_IM;
+  mem[0xFFFD] = 0x42;
+  constexpr u32 NUM_CYCLES = 2;
+
+  CPU CPUCopy = cpu;
+  s32 CyclesUsed = cpu.Execute(NUM_CYCLES, mem);
+
+  EXPECT_EQ(cpu.Y, 0x42);
+  EXPECT_EQ(CyclesUsed, NUM_CYCLES);
+  EXPECT_FALSE(cpu.Z);
+  EXPECT_FALSE(cpu.N);
+  VerifyUnmodifiedFlagsFromLDAXY(CPUCopy);
+}
+
+TEST_F(M6502Test1, LDYImmediateCanAffectTheZeroFlag)
+{
+  cpu.Y = 0x44;
+  mem[0xFFFC] = CPU::INS_LDY_IM;
+  mem[0xFFFD] = 0x0;
+  constexpr u32 NUM_CYCLES = 2;
+
+  CPU CPUCopy = cpu;
+  cpu.Execute(NUM_CYCLES, mem);
+
+  EXPECT_TRUE(cpu.Z);
+  EXPECT_FALSE(cpu.N);
+  VerifyUnmodifiedFlagsFromLDAXY(CPUCopy);
+}
+
+TEST_F(M6502Test1, LDYImmediateCanAffectTheNegativeFlag)
+{
+  mem[0xFFFC] = CPU::INS_LDY_IM;
   mem[0xFFFD] = 0x80;
   constexpr u32 NUM_CYCLES = 2;
 
