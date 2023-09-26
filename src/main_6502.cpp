@@ -86,9 +86,69 @@ m6502::s32 m6502::CPU::Execute(s32 Cycles, Mem& memory)
                 X = FetchByte(Cycles, memory);
                 LoadRegisterSetStatus(X);
             } break;
+            case INS_LDX_ZP:
+            {
+                Byte ZeroPageAddress = FetchByte(Cycles, memory);
+                X = ReadByte(Cycles, ZeroPageAddress, memory);
+                LoadRegisterSetStatus(X);
+            } break;
+            case INS_LDX_ZPY:
+            {
+                Byte ZeroPageAddress = FetchByte(Cycles, memory);
+                ZeroPageAddress += Y;
+                Cycles--;
+                X = ReadByte(Cycles, ZeroPageAddress, memory);
+                LoadRegisterSetStatus(X);
+            } break;
+            case INS_LDX_ABS:
+            {
+                Word AbsAddr = FetchWord(Cycles, memory);
+                X = ReadByte(Cycles, AbsAddr, memory);
+                LoadRegisterSetStatus(X);
+            } break;
+            case INS_LDX_ABSY:
+            {
+                Word AbsAddr = FetchWord(Cycles, memory);
+                X = ReadByte(Cycles, AbsAddr + Y, memory);
+                if ((AbsAddr + Y) - AbsAddr >= 0xFF)
+                {
+                    Cycles--;
+                }
+                LoadRegisterSetStatus(X);
+            } break;
             case INS_LDY_IM:
             {
                 Y = FetchByte(Cycles, memory);
+                LoadRegisterSetStatus(Y);
+            } break;
+            case INS_LDY_ZP:
+            {
+                Byte ZeroPageAddress = FetchByte(Cycles, memory);
+                Y = ReadByte(Cycles, ZeroPageAddress, memory);
+                LoadRegisterSetStatus(Y);
+            } break;
+            case INS_LDY_ZPX:
+            {
+                Byte ZeroPageAddress = FetchByte(Cycles, memory);
+                ZeroPageAddress += X;
+                Cycles--;
+                Y = ReadByte(Cycles, ZeroPageAddress, memory);
+                LoadRegisterSetStatus(Y);
+            } break;
+            case INS_LDY_ABS:
+            {
+                Word AbsAddr = FetchWord(Cycles, memory);
+                Y = ReadByte(Cycles, AbsAddr, memory);
+                LoadRegisterSetStatus(Y);
+            } break;
+            case INS_LDY_ABSX:
+            {
+                Word AbsAddr = FetchWord(Cycles, memory);
+                Y = ReadByte(Cycles, AbsAddr + X, memory);
+                if ((AbsAddr + X) - AbsAddr >= 0xFF)
+                {
+                    Cycles--;
+                }
                 LoadRegisterSetStatus(Y);
             } break;
             default:

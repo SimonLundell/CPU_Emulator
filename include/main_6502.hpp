@@ -77,8 +77,16 @@ struct m6502::CPU
 	static constexpr Byte INS_LDA_INDY = 0xB1;
 	// LDX
 	static constexpr Byte INS_LDX_IM = 0xA2;
+	static constexpr Byte INS_LDX_ZP = 0xA6;
+	static constexpr Byte INS_LDX_ZPY = 0xB6;
+	static constexpr Byte INS_LDX_ABS = 0xAE;
+	static constexpr Byte INS_LDX_ABSY = 0xBE;
 	// LDY
 	static constexpr Byte INS_LDY_IM = 0xA0;
+	static constexpr Byte INS_LDY_ZP = 0xA4;
+	static constexpr Byte INS_LDY_ZPX = 0xB4;
+	static constexpr Byte INS_LDY_ABS = 0xAC;
+	static constexpr Byte INS_LDY_ABSX = 0xBC;
 
 
 	s32 Execute(s32 Cycles, Mem& memory);
