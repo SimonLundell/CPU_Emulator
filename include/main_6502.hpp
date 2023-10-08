@@ -144,7 +144,7 @@ struct m6502::CPU
 		return Data;
 	}
 
-	void LoadRegisterSetStatus(const Byte& Register)
+	void LoadRegisterSetStatus(Byte Register)
 	{
 		Z = (Register == 0);
 		N = (Register & 0b10000000) > 0; // If 7th bit of A set

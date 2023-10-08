@@ -42,6 +42,8 @@ class M6502Test1 : public testing::Test
 void M6502Test1::TestLoadRegisterImmediate(m6502::Byte OpCodeToTest, m6502::Byte m6502::CPU::*RegisterToTest)
 {
   // Given
+  cpu.Z = true;
+  cpu.N = false;
   mem[0xFFFC] = OpCodeToTest;
   mem[0xFFFD] = 0x84;
   constexpr u32 NUM_CYCLES = 2;
@@ -60,6 +62,8 @@ void M6502Test1::TestLoadRegisterImmediate(m6502::Byte OpCodeToTest, m6502::Byte
 
 void M6502Test1::TestLoadZeroPage(m6502::Byte OpCodeToTest, m6502::Byte m6502::CPU::*RegisterToTest)
 {
+  cpu.Z = true;
+  cpu.N = true;
   // Given
   mem[0xFFFC] = OpCodeToTest;
   mem[0xFFFD] = 0x42;
@@ -81,6 +85,8 @@ void M6502Test1::TestLoadZeroPage(m6502::Byte OpCodeToTest, m6502::Byte m6502::C
 void M6502Test1::TestLoadZeroPageOtherRegister(m6502::Byte OpCodeToTest, m6502::Byte m6502::CPU::*RegisterToTest, m6502::Byte m6502::CPU::*OtherRegister)
 {
   // Given
+  cpu.Z = true;
+  cpu.N = true;
   cpu.*OtherRegister = 5;
   mem[0xFFFC] = OpCodeToTest;
   mem[0xFFFD] = 0x42;
@@ -102,6 +108,8 @@ void M6502Test1::TestLoadZeroPageOtherRegister(m6502::Byte OpCodeToTest, m6502::
 void M6502Test1::TestLoadZeroPageAfterWrap(m6502::Byte OpCodeToTest, m6502::Byte m6502::CPU::*RegisterToTest, m6502::Byte m6502::CPU::*OtherRegister)
 {
   // Given
+  cpu.Z = true;
+  cpu.N = true;
   cpu.*OtherRegister = 0xFF;
   mem[0xFFFC] = OpCodeToTest;
   mem[0xFFFD] = 0x80;
@@ -123,6 +131,8 @@ void M6502Test1::TestLoadZeroPageAfterWrap(m6502::Byte OpCodeToTest, m6502::Byte
 void M6502Test1::TestLoadAbsoluteCanLoadValueIntoRegister(m6502::Byte OpCode, m6502::Byte m6502::CPU::*Register)
 {
   // Given
+  cpu.Z = true;
+  cpu.N = true;
   mem[0xFFFC] = OpCode;
   mem[0xFFFD] = 0x80;
   mem[0xFFFE] = 0x44;
@@ -144,6 +154,8 @@ void M6502Test1::TestLoadAbsoluteCanLoadValueIntoRegister(m6502::Byte OpCode, m6
 void M6502Test1::TestLoadAbsoluteRegisterCanLoadValueIntoRegister(m6502::Byte OpCodeToTest, m6502::Byte m6502::CPU::*RegisterToTest, m6502::Byte m6502::CPU::*OtherRegister)
 {
   // Given
+  cpu.Z = true;
+  cpu.N = true;
   cpu.*OtherRegister = 1;
   mem[0xFFFC] = OpCodeToTest;
   mem[0xFFFD] = 0x80;
@@ -166,6 +178,8 @@ void M6502Test1::TestLoadAbsoluteRegisterCanLoadValueIntoRegister(m6502::Byte Op
 void M6502Test1::TestLoadAbsoluteCrossesPageBoundary(m6502::Byte OpCodeToTest, m6502::Byte m6502::CPU::*RegisterToTest, m6502::Byte m6502::CPU::*OtherRegister)
 {
   // Given
+  cpu.Z = true;
+  cpu.N = true;
   cpu.*OtherRegister = 0xFF;
   mem[0xFFFC] = OpCodeToTest;
   mem[0xFFFD] = 0x02;
@@ -188,6 +202,8 @@ void M6502Test1::TestLoadAbsoluteCrossesPageBoundary(m6502::Byte OpCodeToTest, m
 void M6502Test1::TestOpCanAffectZeroFlag(m6502::Byte OpCodeToTest, m6502::Byte m6502::CPU::*RegisterToTest)
 {
   // Given
+  cpu.Z = false;
+  cpu.N = true;
   cpu.*RegisterToTest = 0x44;
   mem[0xFFFC] = OpCodeToTest;
   mem[0xFFFD] = 0x0;
@@ -205,6 +221,8 @@ void M6502Test1::TestOpCanAffectZeroFlag(m6502::Byte OpCodeToTest, m6502::Byte m
 
 void M6502Test1::TestOpCanAffectNegativeFlag(m6502::Byte OpCodeToTest)
 {
+  cpu.Z = true;
+  cpu.N = false;
   mem[0xFFFC] = OpCodeToTest;
   mem[0xFFFD] = 0x80;
   constexpr u32 NUM_CYCLES = 2;
