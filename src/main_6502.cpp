@@ -65,7 +65,7 @@ m6502::Word m6502::CPU::AddrZeroPage(s32& Cycles, const Mem& memory)
 
 m6502::s32 m6502::CPU::Execute(s32 Cycles, Mem& memory)
 {
-    /* Loads a register from the memory address*/
+    /* Loads a register with the value from the memory address*/
     auto LoadRegister = [&Cycles, &memory, this](Word Address, Byte& Register)
     {
         Register = ReadByte(Cycles, Address, memory);
