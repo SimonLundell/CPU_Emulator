@@ -66,6 +66,8 @@ struct m6502::CPU
 	// Opcodes (this CPU has byte codes)
 	// JSR
 	static constexpr Byte INS_JSR = 0x20;
+	
+	/* Load Register Instructions */
 	// LDA
 	static constexpr Byte INS_LDA_IM = 0xA9;
 	static constexpr Byte INS_LDA_ZP = 0xA5;
@@ -87,6 +89,17 @@ struct m6502::CPU
 	static constexpr Byte INS_LDY_ZPX = 0xB4;
 	static constexpr Byte INS_LDY_ABS = 0xAC;
 	static constexpr Byte INS_LDY_ABSX = 0xBC;
+
+	/* Store Register Instructions */
+	// STA
+	static constexpr Byte INS_STA_ZP = 0x85;
+	static constexpr Byte INS_STA_ABS = 0x8D;
+	// STX
+	static constexpr Byte INS_STX_ZP = 0x86;
+	static constexpr Byte INS_STX_ABS = 0x8E;
+	// STY
+	static constexpr Byte INS_STY_ZP = 0x84;
+	static constexpr Byte INS_STY_ABS = 0x8C;
 
 	s32 Execute(s32 Cycles, Mem& memory);
 
