@@ -1,5 +1,67 @@
 #include <main_6502.hpp>
 
+void m6502::CPU::Reset(Mem& memory)
+{
+    PC = 0xFFFC;
+    SP = 0x0100;
+    C = Z = I = D = B = V = N = 0;
+    A = X = Y = 0;
+    memory.Initialise();
+}
+
+m6502::Byte m6502::CPU::FetchByte(s32& Cycles, const Mem& memory)
+{
+    Byte Data = memory[PC];
+    PC++;
+    Cycles--;
+
+    return Data;
+}
+
+m6502::Word m6502::CPU::FetchWord(s32& Cycles, const Mem& memory)
+{
+	/*
+	* If the platform is big endian,
+	* it has to be implemented here, e.g.:
+	* IF (PLATFORM_BIG_ENDIAN)
+	*  SwapBytesInWord(Data);
+	* */
+    Word Data = memory[PC];
+    PC++;
+
+    Data |= (memory[PC] << 8 );
+    PC++;
+    Cycles -= 2;
+
+    return Data;
+}
+
+m6502::Byte m6502::CPU::ReadByte(s32& Cycles, Word Address, const Mem& memory)
+{
+    Byte Data = memory[Address];
+    Cycles--;
+    return Data;
+}
+
+m6502::Word m6502::CPU::ReadWord(s32& Cycles, Word Address, const Mem& memory)
+{
+    Word Data = memory[Address];
+    Data |= (memory[Address + 1] << 8);
+    Cycles -= 2;
+    return Data;
+}
+
+void m6502::CPU::LoadRegisterSetStatus(Byte Register)
+{
+    Z = (Register == 0);
+    N = (Register & 0b10000000) > 0; // If 7th bit of A set
+}
+
+m6502::Word m6502::CPU::AddrZeroPage(s32& Cycles, const Mem& memory)
+{
+    Byte ZeroPageAddress = FetchByte(Cycles, memory);
+    return ZeroPageAddress;
+}
 
 m6502::s32 m6502::CPU::Execute(s32 Cycles, Mem& memory)
 {
@@ -17,16 +79,16 @@ m6502::s32 m6502::CPU::Execute(s32 Cycles, Mem& memory)
             } break;
             case INS_LDA_ZP:
             {
-                Byte ZeroPageAddress = FetchByte(Cycles, memory);
-                A = ReadByte(Cycles, ZeroPageAddress, memory);
+                Byte Address = AddrZeroPage(Cycles, memory);
+                A = ReadByte(Cycles, Address, memory);
                 LoadRegisterSetStatus(A);
             } break;
             case INS_LDA_ZPX:
             {
-                Byte ZeroPageAddress = FetchByte(Cycles, memory);
-                ZeroPageAddress += X;
+                Byte Address = AddrZeroPage(Cycles, memory);
+                Address += X;
                 Cycles--;
-                A = ReadByte(Cycles, ZeroPageAddress, memory);
+                A = ReadByte(Cycles, Address, memory);
                 LoadRegisterSetStatus(A);
             } break;
             case INS_LDA_ABS:
@@ -88,16 +150,16 @@ m6502::s32 m6502::CPU::Execute(s32 Cycles, Mem& memory)
             } break;
             case INS_LDX_ZP:
             {
-                Byte ZeroPageAddress = FetchByte(Cycles, memory);
-                X = ReadByte(Cycles, ZeroPageAddress, memory);
+                Byte Address = AddrZeroPage(Cycles, memory);
+                X = ReadByte(Cycles, Address, memory);
                 LoadRegisterSetStatus(X);
             } break;
             case INS_LDX_ZPY:
             {
-                Byte ZeroPageAddress = FetchByte(Cycles, memory);
-                ZeroPageAddress += Y;
+                Byte Address = AddrZeroPage(Cycles, memory);
+                Address += Y;
                 Cycles--;
-                X = ReadByte(Cycles, ZeroPageAddress, memory);
+                X = ReadByte(Cycles, Address, memory);
                 LoadRegisterSetStatus(X);
             } break;
             case INS_LDX_ABS:
@@ -123,16 +185,16 @@ m6502::s32 m6502::CPU::Execute(s32 Cycles, Mem& memory)
             } break;
             case INS_LDY_ZP:
             {
-                Byte ZeroPageAddress = FetchByte(Cycles, memory);
-                Y = ReadByte(Cycles, ZeroPageAddress, memory);
+                Byte Address = AddrZeroPage(Cycles, memory);
+                Y = ReadByte(Cycles, Address, memory);
                 LoadRegisterSetStatus(Y);
             } break;
             case INS_LDY_ZPX:
             {
-                Byte ZeroPageAddress = FetchByte(Cycles, memory);
-                ZeroPageAddress += X;
+                Byte Address = AddrZeroPage(Cycles, memory);
+                Address += X;
                 Cycles--;
-                Y = ReadByte(Cycles, ZeroPageAddress, memory);
+                Y = ReadByte(Cycles, Address, memory);
                 LoadRegisterSetStatus(Y);
             } break;
             case INS_LDY_ABS:

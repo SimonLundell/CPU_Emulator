@@ -475,3 +475,17 @@ TEST_F(M6502Test1, LDAIndirectYCanLoadValueIntoTheARegister)
   EXPECT_FALSE(cpu.Z);
   VerifyUnmodifiedFlagsFromLDAXY(CPUCopy);
 }
+/*
+TEST_F(M6502Test1, STAAbsoluteCanStoreValueIntoRegister)
+{
+  cpu.A = 0x04;
+  mem[0xFFFC] = CPU::INS_STA_ABS;
+  mem[0xFFFD] = 0x02;
+  
+  constexpr u32 NUM_CYCLES = 3;
+  s32 CyclesUsed = cpu.Execute(NUM_CYCLES, mem);
+  
+  EXPECT_EQ(cpu.A, mem[0x0002]);
+  EXPECT_EQ(CyclesUsed, NUM_CYCLES)
+}
+*/

@@ -88,65 +88,13 @@ struct m6502::CPU
 	static constexpr Byte INS_LDY_ABS = 0xAC;
 	static constexpr Byte INS_LDY_ABSX = 0xBC;
 
-
 	s32 Execute(s32 Cycles, Mem& memory);
 
-	void Reset(Mem& memory)
-	{
-		PC = 0xFFFC;
-		SP = 0x0100;
-		C = Z = I = D = B = V = N = 0;
-		A = X = Y = 0;
-		memory.Initialise();
-	}
-
-	Byte FetchByte(s32& Cycles, Mem& memory)
-	{
-		Byte Data = memory[PC];
-		PC++;
-		Cycles--;
-
-		return Data;
-	}
-
-	Word FetchWord(s32& Cycles, Mem& memory)
-	{
-		// 6502 is little endian
-		Word Data = memory[PC];
-		PC++;
-
-		Data |= (memory[PC] << 8 );
-		PC++;
-		Cycles -= 2;
-		
-		/*
-		* If the platform is big endian,
-		* it has to be implemented here, e.g.:
-		* IF (PLATFORM_BIG_ENDIAN)
-		*  SwapBytesInWord(Data);
-		* */
-
-		return Data;
-	}
-
-	Byte ReadByte(s32& Cycles, Word Address, Mem& memory)
-	{
-		Byte Data = memory[Address];
-		Cycles--;
-		return Data;
-	}
-
-	Word ReadWord(s32& Cycles, Word Address, Mem& memory)
-	{
-		Word Data = memory[Address];
-		Data |= (memory[Address + 1] << 8);
-		Cycles -= 2;
-		return Data;
-	}
-
-	void LoadRegisterSetStatus(Byte Register)
-	{
-		Z = (Register == 0);
-		N = (Register & 0b10000000) > 0; // If 7th bit of A set
-	}
+	void Reset(Mem& memory);
+	Byte FetchByte(s32& Cycles, const Mem& memory);
+	Word FetchWord(s32& Cycles, const Mem& memory); // 6502 is little endian
+	Byte ReadByte(s32& Cycles, Word Address, const Mem& memory);
+	Word ReadWord(s32& Cycles, Word Address, const Mem& memory);
+	void LoadRegisterSetStatus(Byte Register);
+	Word AddrZeroPage(s32& Cycles, const Mem& memory);
 };
