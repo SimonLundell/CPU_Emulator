@@ -93,12 +93,18 @@ struct m6502::CPU
 	/* Store Register Instructions */
 	// STA
 	static constexpr Byte INS_STA_ZP = 0x85;
+	static constexpr Byte INS_STA_ZPX = 0x95;
 	static constexpr Byte INS_STA_ABS = 0x8D;
+	static constexpr Byte INS_STA_ABSX = 0x9D;
+	static constexpr Byte INS_STA_ABSY = 0x99;
+	static constexpr Byte INS_STA_INDX = 0x81;
+	static constexpr Byte INS_STA_INDY = 0x91;
 	// STX
 	static constexpr Byte INS_STX_ZP = 0x86;
 	static constexpr Byte INS_STX_ABS = 0x8E;
 	// STY
 	static constexpr Byte INS_STY_ZP = 0x84;
+	static constexpr Byte INS_STY_ZPX = 0x94;
 	static constexpr Byte INS_STY_ABS = 0x8C;
 
 	s32 Execute(s32 Cycles, Mem& memory);
